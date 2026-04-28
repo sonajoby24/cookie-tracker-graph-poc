@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cookie Tracker Graph PoC</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.30.4/cytoscape.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header class="hero">
+      <h1>Cookie Tracker Graph PoC</h1>
+      <p>Crawl cookies, expose API, preview graph JSON, and inspect cookie relationships.</p>
+    </header>
+
+    <section class="summary-grid">
+      <div class="stat-card">
+        <span class="stat-label">Total Cookies</span>
+        <strong id="statCookies">0</strong>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Domains</span>
+        <strong id="statDomains">0</strong>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Secure Cookies</span>
+        <strong id="statSecure">0</strong>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">HttpOnly</span>
+        <strong id="statHttpOnly">0</strong>
+      </div>
+    </section>
+
+    <section class="controls">
+      <button id="loadCookiesBtn">Load Cookies</button>
+      <button id="loadGraphBtn">Load Graph</button>
+      <button id="fitGraphBtn">Fit Graph</button>
+    </section>
+
+    <section class="legend panel">
+      <h2>Legend</h2>
+      <div class="legend-items">
+        <div><span class="legend-dot site"></span> Site</div>
+        <div><span class="legend-dot domain"></span> Domain</div>
+        <div><span class="legend-dot cookie"></span> Cookie</div>
+      </div>
+    </section>
+
+    <section class="main-grid">
+      <div class="panel graph-panel">
+        <h2>Graph View</h2>
+        <div id="cy"></div>
+      </div>
+
+      <div class="side-column">
+        <div class="panel">
+          <h2>Selected Node</h2>
+          <pre id="details">Click a graph node to inspect details...</pre>
+        </div>
+
+        <div class="panel">
+          <h2>Output</h2>
+          <pre id="output">Click a button to load data...</pre>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

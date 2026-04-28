@@ -1,0 +1,310 @@
+This file is a merged representation of a subset of the codebase, containing specifically included files, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of a subset of the repository's contents that is considered the most important context.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Only files matching these patterns are included: backend/main.py, backend/services/**/*, backend/data/**/*, backend/requirements.txt
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+backend/data/scans/cookies.json
+backend/main.py
+backend/requirements.txt
+backend/services/graph_builder.py
+backend/services/metrics.py
+backend/services/normalize.py
+backend/services/parser.py
+backend/services/storage.py
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="backend/data/scans/cookies.json">
+{
+  "site": "https://www.wikipedia.org",
+  "cookie_count": 5,
+  "cookies": [
+    {
+      "name": "WMF-Last-Access",
+      "value": "21-Apr-2026",
+      "domain": "www.wikipedia.org",
+      "path": "/",
+      "expires": 1779516547.378357,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "WMF-Last-Access-Global",
+      "value": "21-Apr-2026",
+      "domain": ".wikipedia.org",
+      "path": "/",
+      "expires": 1779516547.378588,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "GeoIP",
+      "value": "JP:13:Tokyo:35.69:139.69:v4",
+      "domain": ".wikipedia.org",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "NetworkProbeLimit",
+      "value": "0.001",
+      "domain": "www.wikipedia.org",
+      "path": "/",
+      "expires": 1776758943.378717,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "WMF-Uniq",
+      "value": "71rXh86CjtebEvsp2vWLXANJAAEBAFvdNPBvzCkbDp9Sb3lLQ0rfxK58L_zbz9Vx",
+      "domain": ".wikipedia.org",
+      "path": "/",
+      "expires": 1808284065.69742,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    }
+  ]
+}
+</file>
+
+<file path="backend/main.py">
+from pathlib import Path
+import json
+from fastapi import FastAPI
+from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.middleware.cors import CORSMiddleware
+from services.normalize import normalize_cookies
+from services.metrics import build_metrics
+from services.graph_builder import build_graph
+import io
+
+BASE_DIR = Path(__file__).resolve().parent
+DATA_FILE = BASE_DIR / "data" / "scans" / "cookies.json"
+
+app = FastAPI(title="Cookie Tracker Graph Intelligence API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+SYNTHETIC_DATA = [
+    {"name": "_ga", "value": "x", "domain": ".google-analytics.com", "path": "/", "secure": True, "httpOnly": False, "sameSite": "None", "source_url": "synthetic"},
+    {"name": "sessionid", "value": "y", "domain": "targetsite.com", "path": "/", "secure": True, "httpOnly": True, "sameSite": "Lax", "source_url": "synthetic"},
+    {"name": "_fbp", "value": "z", "domain": ".facebook.com", "path": "/", "secure": True, "httpOnly": False, "sameSite": "None", "source_url": "synthetic"},
+]
+
+def load_raw():
+    if DATA_FILE.exists():
+        try:
+            payload = json.loads(DATA_FILE.read_text(encoding="utf-8"))
+            if isinstance(payload, list) and len(payload) > 0:
+                return payload, "Live"
+        except Exception:
+            pass
+    return SYNTHETIC_DATA, "Synthetic"
+
+@app.get("/summary")
+def summary():
+    raw, status = load_raw()
+    df = normalize_cookies(raw)
+    metrics = build_metrics(df)
+    return {"sourceStatus": status, "metrics": metrics}
+
+@app.get("/graph")
+def graph():
+    raw, status = load_raw()
+    df = normalize_cookies(raw)
+    return {"sourceStatus": status, "graph": build_graph(df)}
+
+@app.get("/cookies")
+def cookies():
+    raw, status = load_raw()
+    df = normalize_cookies(raw)
+    return {"sourceStatus": status, "rows": df.to_dict(orient="records")}
+
+@app.get("/source-status")
+def source_status():
+    raw, status = load_raw()
+    return {"sourceStatus": status, "recordCount": len(raw)}
+
+@app.get("/download/json")
+def download_json():
+    raw, status = load_raw()
+    buffer = io.BytesIO(json.dumps(raw, indent=2).encode("utf-8"))
+    return StreamingResponse(
+        buffer,
+        media_type="application/json",
+        headers={"Content-Disposition": "attachment; filename=cookie-sample.json"}
+    )
+
+@app.get("/download/csv")
+def download_csv():
+    raw, status = load_raw()
+    df = normalize_cookies(raw)
+    buffer = io.StringIO()
+    df.to_csv(buffer, index=False)
+    return StreamingResponse(
+        iter([buffer.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=cookie-sample.csv"}
+    )
+</file>
+
+<file path="backend/requirements.txt">
+fastapi
+uvicorn
+pandas
+python-multipart
+</file>
+
+<file path="backend/services/graph_builder.py">
+def build_graph(df):
+    nodes = []
+    edges = []
+    seen = set()
+
+    site_id = "site:target"
+    nodes.append({"id": site_id, "label": "Target Site", "type": "site"})
+
+    for _, row in df.iterrows():
+        domain_id = f"domain:{row['domain']}"
+        cookie_id = f"cookie:{row['domain']}:{row['name']}"
+        category_id = f"category:{row['category']}"
+
+        for node_id, label, node_type in [
+            (domain_id, row["domain"], "domain"),
+            (cookie_id, row["name"], "cookie"),
+            (category_id, row["category"], "category"),
+        ]:
+            if node_id not in seen:
+                nodes.append({"id": node_id, "label": label, "type": node_type})
+                seen.add(node_id)
+
+        edges.append({"id": f"{site_id}->{domain_id}", "source": site_id, "target": domain_id})
+        edges.append({"id": f"{domain_id}->{cookie_id}", "source": domain_id, "target": cookie_id})
+        edges.append({"id": f"{cookie_id}->{category_id}", "source": cookie_id, "target": category_id})
+
+    deduped = {edge["id"]: edge for edge in edges}
+    return {"nodes": nodes, "edges": list(deduped.values())}
+</file>
+
+<file path="backend/services/metrics.py">
+def build_metrics(df):
+    total = len(df)
+    unique_domains = int(df["domain"].nunique()) if not df.empty else 0
+    third_party = int((df["party_type"] == "Third-Party").sum()) if not df.empty else 0
+    analytics = int((df["category"] == "Analytics").sum()) if not df.empty else 0
+
+    return {
+        "totalCookies": total,
+        "uniqueDomains": unique_domains,
+        "thirdPartyCookies": third_party,
+        "analyticsCookies": analytics,
+    }
+</file>
+
+<file path="backend/services/normalize.py">
+import pandas as pd
+
+EXPECTED_COLUMNS = [
+    "name", "value", "domain", "path", "expires", "httpOnly",
+    "secure", "sameSite", "source_url"
+]
+
+def normalize_cookies(raw_items):
+    if not raw_items:
+        return pd.DataFrame(columns=EXPECTED_COLUMNS)
+
+    df = pd.DataFrame(raw_items)
+
+    for col in EXPECTED_COLUMNS:
+        if col not in df.columns:
+            df[col] = None
+
+    df["domain"] = df["domain"].fillna("unknown").astype(str)
+    df["name"] = df["name"].fillna("unnamed").astype(str)
+    df["path"] = df["path"].fillna("/").astype(str)
+    df["sameSite"] = df["sameSite"].fillna("Unknown").astype(str)
+    df["secure"] = df["secure"].fillna(False).astype(bool)
+    df["httpOnly"] = df["httpOnly"].fillna(False).astype(bool)
+
+    df["category"] = df["name"].apply(classify_cookie)
+    df["party_type"] = df["domain"].apply(classify_party_type)
+
+    return df
+
+def classify_cookie(name: str) -> str:
+    token = name.lower()
+    if any(k in token for k in ["ga", "_ga", "gid", "analytics", "pk_"]):
+        return "Analytics"
+    if any(k in token for k in ["ad", "fb", "_fb", "doubleclick", "track"]):
+        return "Marketing"
+    if any(k in token for k in ["sess", "csrf", "auth", "token"]):
+        return "Essential"
+    return "Unknown"
+
+def classify_party_type(domain: str) -> str:
+    if domain.startswith(".") or domain.count(".") >= 2:
+        return "Third-Party"
+    return "First-Party"
+</file>
+
+<file path="backend/services/parser.py">
+
+</file>
+
+<file path="backend/services/storage.py">
+
+</file>
+
+</files>

@@ -1,0 +1,162 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #020b24;
+  color: #f5f7ff;
+}
+
+.container {
+  padding: 20px;
+}
+
+.hero h1 {
+  margin: 0 0 8px;
+  font-size: 2.2rem;
+}
+
+.hero p {
+  margin: 0 0 20px;
+  color: #cfd8ff;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  background: #121d43;
+  border: 1px solid #24305f;
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.stat-label {
+  display: block;
+  color: #9fb2ff;
+  font-size: 0.9rem;
+  margin-bottom: 6px;
+}
+
+.stat-card strong {
+  font-size: 1.8rem;
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+button {
+  background: #6c63ff;
+  color: white;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+button:hover {
+  background: #5a52e8;
+}
+
+.panel {
+  background: #121d43;
+  border: 1px solid #24305f;
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.legend-items {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  color: #e7ecff;
+}
+
+.legend-dot {
+  width: 14px;
+  height: 14px;
+  display: inline-block;
+  border-radius: 50%;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+.legend-dot.site {
+  background: #7c4dff;
+}
+
+.legend-dot.domain {
+  background: #2196f3;
+}
+
+.legend-dot.cookie {
+  background: #00c853;
+}
+
+.main-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+}
+
+.graph-panel {
+  min-height: 650px;
+}
+
+#cy {
+  width: 100%;
+  height: 580px;
+  background: #081330;
+  border-radius: 12px;
+}
+
+pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #e7ecff;
+  font-size: 13px;
+  max-height: 280px;
+  overflow: auto;
+  background: #0b1534;
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.side-column .panel {
+  margin-bottom: 20px;
+}
+
+@media (max-width: 960px) {
+  .summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .main-grid {
+    grid-template-columns: 1fr;
+  }
+
+  #cy {
+    height: 500px;
+  }
+}
+
+@media (max-width: 640px) {
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .controls {
+    flex-direction: column;
+  }
+}

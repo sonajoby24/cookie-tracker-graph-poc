@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cookie Tracker Graph Workflow</title>
+  <style>
+    :root {
+      --bg: #040816;
+      --bg-2: #07112a;
+      --panel: rgba(18, 29, 67, 0.88);
+      --panel-2: rgba(11, 19, 48, 0.95);
+      --border: rgba(113, 141, 255, 0.22);
+      --border-strong: rgba(132, 112, 255, 0.45);
+      --text: #f4f7ff;
+      --muted: #9caad8;
+      --purple: #7c5cff;
+      --purple-2: #9e83ff;
+      --blue: #39a0ff;
+      --green: #12d47a;
+      --teal: #1fd5d1;
+      --orange: #ffb84d;
+      --red: #ff6b81;
+      --shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+      --radius-xl: 24px;
+      --radius-lg: 18px;
+      --radius-md: 14px;
+      --radius-pill: 999px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(124, 92, 255, 0.16), transparent 24%),
+        radial-gradient(circle at top right, rgba(57, 160, 255, 0.12), transparent 22%),
+        linear-gradient(180deg, #02050f 0%, #030815 30%, #030817 100%);
+      min-height: 100vh;
+    }
+
+    .page {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 32px 0 80px;
+      position: relative;
+    }
+
+    .hero {
+      text-align: center;
+      padding: 28px 16px 46px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid rgba(130, 117, 255, 0.35);
+      background: rgba(20, 22, 58, 0.6);
+      color: #ac9cff;
+      border-radius: var(--radius-pill);
+      padding: 8px 14px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1.6px;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.4rem, 5vw, 5rem);
+      line-height: 0.98;
+      letter-spacing: -1.8px;
+      font-weight: 800;
+    }
+
+    .title-accent { color: #8f7bff; }
+
+    .subtitle {
+      max-width: 760px;
+      margin: 18px auto 0;
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 1rem;
+    }
+
+    .timeline {
+      position: relative;
+      max-width: 820px;
+      margin: 0 auto;
+      padding-top: 10px;
+    }
+
+    .timeline::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      transform: translateX(-50%);
+      background: linear-gradient(
+        180deg,
+        rgba(122, 103, 255, 0.05) 0%,
+        rgba(122, 103, 255, 0.5) 15%,
+        rgba(57, 160, 255, 0.4) 55%,
+        rgba(31, 213, 209, 0.35) 100%
+      );
+      box-shadow: 0 0 18px rgba(110, 103, 255, 0.35);
+    }
+
+    .phase {
+      position: relative;
+      margin: 34px 0 10px;
+      padding-top: 12px;
+    }
+
+    .phase-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 0 auto 18px;
+      width: fit-content;
+      padding: 8px 14px;
+      border-radius: var(--radius-pill);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1.4px;
+      border: 1px solid rgba(130, 117, 255, 0.22);
+      background: rgba(16, 19, 44, 0.78);
+      color: #b8adff;
+      position: relative;
+      z-index: 2;
+    }
+
+    .step {
+      position: relative;
+      width: calc(50% - 28px);
+      background: linear-gradient(180deg, rgba(15, 24, 58, 0.95), rgba(11, 18, 45, 0.95));
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 28px 24px 20px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(6px);
+      margin-bottom: 26px;
+    }
+
+    .step.left { margin-right: auto; }
+    .step.right { margin-left: auto; }
+    .step.center {
+      width: min(720px, 100%);
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .step::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      width: 30px;
+      height: 2px;
+      background: linear-gradient(90deg, rgba(146, 123, 255, 0.95), rgba(70, 160, 255, 0.85));
+      box-shadow: 0 0 12px rgba(130, 117, 255, 0.35);
+    }
+
+    .step.left::after { right: -30px; }
+    .step.right::after { left: -30px; }
+    .step.center::after { display: none; }
+
+    .step-number {
+      position: absolute;
+      top: -12px;
+      left: 22px;
+      min-width: 40px;
+      text-align: center;
+      padding: 5px 12px;
+      border-radius: var(--radius-pill);
+      background: linear-gradient(90deg, #8b6dff, #6e8cff);
+      color: white;
+      font-size: 12px;
+      font-weight: 700;
+      box-shadow: 0 10px 25px rgba(97, 94, 255, 0.35);
+    }
+
+    .step h2 {
+      margin: 6px 0 10px;
+      font-size: clamp(1.4rem, 2vw, 1.8rem);
+      line-height: 1.15;
+      letter-spacing: -0.4px;
+    }
+
+    .step p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 0.96rem;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: var(--radius-pill);
+      padding: 6px 11px;
+      font-size: 12px;
+      letter-spacing: 0.2px;
+      border: 1px solid transparent;
+      background: rgba(255, 255, 255, 0.04);
+      color: #dce4ff;
+    }
+
+    .tag.purple {
+      background: rgba(124, 92, 255, 0.14);
+      border-color: rgba(124, 92, 255, 0.28);
+      color: #c9bbff;
+    }
+
+    .tag.blue {
+      background: rgba(57, 160, 255, 0.14);
+      border-color: rgba(57, 160, 255, 0.28);
+      color: #a7d4ff;
+    }
+
+    .tag.green {
+      background: rgba(18, 212, 122, 0.14);
+      border-color: rgba(18, 212, 122, 0.28);
+      color: #9ff0c5;
+    }
+
+    .tag.orange {
+      background: rgba(255, 184, 77, 0.14);
+      border-color: rgba(255, 184, 77, 0.28);
+      color: #ffd899;
+    }
+
+    .tag.red {
+      background: rgba(255, 107, 129, 0.14);
+      border-color: rgba(255, 107, 129, 0.28);
+      color: #ffb5c1;
+    }
+
+    .arrow-down {
+      width: 28px;
+      height: 46px;
+      margin: -6px auto 18px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .arrow-down::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 0;
+      width: 2px;
+      height: 32px;
+      transform: translateX(-50%);
+      background: linear-gradient(180deg, rgba(124, 92, 255, 0.7), rgba(57, 160, 255, 0.7));
+      box-shadow: 0 0 12px rgba(110, 103, 255, 0.25);
+    }
+
+    .arrow-down::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: 0;
+      width: 10px;
+      height: 10px;
+      border-right: 2px solid #77a2ff;
+      border-bottom: 2px solid #77a2ff;
+      transform: translateX(-50%) rotate(45deg);
+    }
+
+    .decision {
+      width: min(760px, 100%);
+      margin: 8px auto 20px;
+      padding: 22px 24px;
+      border-radius: var(--radius-xl);
+      background: linear-gradient(180deg, rgba(13, 21, 51, 0.96), rgba(10, 17, 42, 0.96));
+      border: 1px solid rgba(255, 184, 77, 0.38);
+      box-shadow: var(--shadow);
+      text-align: center;
+      position: relative;
+      z-index: 2;
+    }
+
+    .decision h2 {
+      margin: 0 0 8px;
+      font-size: 1.6rem;
+      color: #ffc66f;
+    }
+
+    .decision p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .decision-labels {
+      display: flex;
+      justify-content: center;
+      gap: 140px;
+      margin: 16px auto 12px;
+      max-width: 700px;
+      color: #dfe6ff;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1.4px;
+    }
+
+    .decision-label.approved { color: #67f0b3; }
+    .decision-label.iterate { color: #ff8ea0; }
+
+    .branch-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 22px;
+      max-width: 900px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 2;
+    }
+
+    .branch {
+      background: linear-gradient(180deg, rgba(15, 24, 58, 0.96), rgba(11, 18, 45, 0.96));
+      border-radius: var(--radius-xl);
+      padding: 22px 22px 18px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      min-height: 170px;
+    }
+
+    .branch.approved { border-color: rgba(18, 212, 122, 0.35); }
+    .branch.iterate { border-color: rgba(255, 107, 129, 0.35); }
+
+    .branch h3 {
+      margin: 0 0 10px;
+      font-size: 1.35rem;
+    }
+
+    .branch p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .connector-row {
+      position: relative;
+      max-width: 900px;
+      height: 44px;
+      margin: -8px auto 0;
+    }
+
+    .connector-row::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 0;
+      width: 2px;
+      height: 20px;
+      transform: translateX(-50%);
+      background: linear-gradient(180deg, rgba(255, 184, 77, 0.75), rgba(124, 92, 255, 0.35));
+    }
+
+    .connector-row .line-left,
+    .connector-row .line-right {
+      position: absolute;
+      top: 20px;
+      width: calc(50% - 1px);
+      height: 2px;
+      background: rgba(124, 92, 255, 0.45);
+    }
+
+    .connector-row .line-left { left: 0; }
+    .connector-row .line-right { right: 0; }
+
+    .footer-note {
+      max-width: 860px;
+      margin: 40px auto 0;
+      padding: 20px 22px;
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(57, 160, 255, 0.22);
+      background: rgba(10, 18, 42, 0.8);
+      color: var(--muted);
+      line-height: 1.7;
+      text-align: center;
+    }
+
+    .footer-note strong { color: #dfe7ff; }
+
+    @media (max-width: 900px) {
+      .timeline::before {
+        left: 18px;
+        transform: none;
+      }
+
+      .phase-header {
+        margin-left: 42px;
+      }
+
+      .step,
+      .step.left,
+      .step.right,
+      .step.center {
+        width: calc(100% - 44px);
+        margin-left: 44px;
+        margin-right: 0;
+      }
+
+      .step::after { display: none; }
+      .branch-row { grid-template-columns: 1fr; }
+      .decision-labels { gap: 32px; }
+      .connector-row { display: none; }
+    }
+
+    @media (max-width: 600px) {
+      .page {
+        width: min(100% - 20px, 1120px);
+        padding-top: 20px;
+      }
+
+      .hero { padding: 18px 6px 34px; }
+      .step { padding: 24px 18px 18px; }
+      .decision, .branch { padding: 18px 16px; }
+      .subtitle { font-size: 0.95rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="hero">
+      <div class="eyebrow">Cookie Tracker • EV-style Workflow</div>
+      <h1>Cookie Tracker <span class="title-accent">Graph Workflow</span></h1>
+      <p class="subtitle">
+        A presentation workflow for a proof-of-concept that crawls website cookies, transforms them into a site-domain-cookie graph,
+        exposes the graph through a FastAPI backend, and visualizes the relationships in an interactive Deck.gl + Mapbox frontend.
+      </p>
+    </header>
+
+    <main class="timeline">
+      <section class="phase">
+        <div class="phase-header">Phase 1 — Brief & Scope</div>
+
+        <article class="step left">
+          <div class="step-number">01</div>
+          <h2>Receive PoC Brief</h2>
+          <p>
+            Confirm the goal of the PoC: whether the client wants cookie inventory, third-party tracking visibility,
+            consent comparison, request flow analysis, or a relationship intelligence demo.
+          </p>
+          <div class="tags">
+            <span class="tag purple">Client Requirement</span>
+            <span class="tag orange">PoC Scope</span>
+            <span class="tag blue">Demo Objective</span>
+          </div>
+        </article>
+
+        <div class="arrow-down"></div>
+
+        <article class="step right">
+          <div class="step-number">02</div>
+          <h2>Identify Target Sites & Pages</h2>
+          <p>
+            Select public websites or demo URLs to crawl, then define whether the scan covers the homepage only
+            or multiple flows such as landing, product, checkout, and consent entry points.
+          </p>
+          <div class="tags">
+            <span class="tag blue">Public URLs</span>
+            <span class="tag green">Target Pages</span>
+            <span class="tag orange">Scan Plan</span>
+          </div>
+        </article>
+
+        <div class="arrow-down"></div>
+
+        <article class="step left">
+          <div class="step-number">03</div>
+          <h2>Choose Tech Stack</h2>
+          <p>
+            Use Playwright for browser automation, FastAPI for backend APIs, JSON as the interim data layer,
+            and Deck.gl + Mapbox Dark for the interactive relationship intelligence stage in the browser.
+          </p>
+          <div class="tags">
+            <span class="tag purple">Playwright</span>
+            <span class="tag blue">FastAPI</span>
+            <span class="tag green">Deck.gl</span>
+            <span class="tag orange">Mapbox Dark</span>
+          </div>
+        </article>
+      </section>
+
+      <section class="phase">
+        <div class="phase-header">Phase 2 — Crawl & Extract</div>
+
+        <article class="step right">
+          <div class="step-number">04</div>
+          <h2>Open Site in Browser Context</h2>
+          <p>
+            Launch a controlled browser session, load the selected website, wait for the page to stabilize,
+            and prepare the browser context for cookie inspection and request capture.
+          </p>
+          <div class="tags">
+            <span class="tag purple">Browser Context</span>
+            <span class="tag blue">Page Load</span>
+            <span class="tag orange">Session Start</span>
+          </div>
+        </article>
+
+        <div class="arrow-down"></div>
+
+        <article class="step left">
+          <div class="step-number">05</div>
+          <h2>Capture Cookie Metadata</h2>
+          <p>
+            Read cookies from the browser context and capture fields like cookie name, domain, path, expiry,
+            secure flag, httpOnly flag, sameSite behavior, and inferred category.
+          </p>
+          <div class="tags">
+            <span class="tag green">Cookie Read</span>
+            <span class="tag blue">Metadata</span>
+            <span class="tag orange">Security Flags</span>
+          </div>
+        </article>
+
+        <div class="arrow-down"></div>
+
+        <article class="step right">
+          <div class="step-number">06</div>
+          <h2>Store Raw Scan Output</h2>
+          <p>
+            Save the raw crawl result in a reusable JSON file so the same cookie scan can feed the backend,
+            graph builder, waterfall analysis, and demo frontend without rerunning the crawl every time.
+          </p>
+          <div class="tags">
+            <span class="tag purple">cookies.json</span>
+            <span class="tag blue">Reusable Output</span>
+            <span class="tag green">Data Snapshot</span>
+          </div>
+        </article>
+      </section>
+
+      <section class="phase">
+        <div class="phase-header">Phase 3 — Transform & Model</div>
+
+        <article class="step left">
+          <div class="step-number">07</div>
+          <h2>Normalize Cookie Records</h2>
+          <p>
+            Clean the raw cookie structure and standardize fields so every record can be transformed consistently
+            into graph nodes, risk indicators, consent summaries, and vendor summaries.
+          </p>
+          <div class="tags">
+            <span class="tag blue">Normalization</span>
+            <span class="tag orange">Field Cleanup</span>
+            <span class="tag green">Consistent Schema</span>
+          </div>
+        </article>
+
+        <div class="arrow-down"></div>
+
+        <article class="step right">
+          <div class="step-number">08</div>
+          <h2>Build Site-Domain-Cookie Graph</h2>
+          <p>
+            Create graph nodes for the scanned site, domains, cookies, vendors, and categories, then connect them
+            with relationships that expose first-party and third-party tracking structure.
+          </p>
+          <div class="tags">
+            <span class="tag purple">Graph Nodes</span>
+            <span class="tag blue">Graph Edges</span>
+            <span class="tag green">Relationship Map</span>
+          </div>
+        </article>
+
+        <div class="arrow-down"></div>
+
+        <article class="step left">
+          <div class="step-number">09</div>
+          <h2>Prepare Summary Metrics</h2>
+          <p>
+            Compute counts for total cookies, domains, third-party links, vendors, high-risk records,
+            and category spread so the frontend can present a fast executive view before exploration.
+          </p>
+          <div class="tags">
+            <span class="tag orange">Cookie Count</span>
+            <span class="tag green">Domain Count</span>
+            <span class="tag blue">Risk Summary</span>
+          </div>
+        </article>
+      </section>
+
+      <section class="phase">
+        <div class="phase-header">Phase 4 — Backend API</div>
+
+        <article class="step right">
+          <div class="step-number">10</div>
+          <h2>Expose REST Endpoints</h2>
+          <p>
+            Return summary data, graph data, and dashboard-supporting payloads through API endpoints so the frontend
+            can load only the panels it needs.
+          </p>
+          <div class="tags">
+            <span class="tag blue">/summary</span>
+            <span class="tag purple">/graph</span>
+            <span class="tag orange">/dashboard</span>
+          </div>
+        </article>
+
+        <div class="arrow-down"></div>
+
+        <article class="step left">
+          <div class="step-number">11</div>
+          <h2>Enable Frontend Access</h2>
+          <p>
+            Configure local API access, CORS behavior, and environment variables so the dashboard can fetch
+            cookie intelligence data reliably during development and demo sessions.
+          </p>
+          <div class="tags">
+            <span class="tag green">CORS</span>
+            <span class="tag blue">Localhost</span>
+            <span class="tag orange">Frontend Fetch</span>
+          </div>
+        </article>
+      </section>
+
+      <section class="phase">
+        <div class="phase-header">Phase 5 — Frontend Demo</div>
+
+        <article class="step right">
+          <div class="step-number">12</div>
+          <h2>Load Dashboard Summary</h2>
+          <p>
+            Display KPI cards for total cookies, domains, third-party exposure, vendors, high-risk records,
+            and unknown classification to establish the top-level intelligence view.
+          </p>
+          <div class="tags">
+            <span class="tag blue">KPI Strip</span>
+            <span class="tag purple">Dashboard</span>
+            <span class="tag green">Quick Metrics</span>
+          </div>
+        </article>
+
+        <div class="arrow-down"></div>
+
+        <article class="step left">
+          <div class="step-number">13</div>
+          <h2>Render Interactive Map Stage</h2>
+          <p>
+            Use Deck.gl and Mapbox Dark to render the site-domain-cookie-vendor-category relationships as an
+            interactive intelligence stage where users can zoom, pan, and inspect structure visually.
+          </p>
+          <div class="tags">
+            <span class="tag green">Graph Canvas</span>
+            <span class="tag blue">Interactive Nodes</span>
+            <span class="tag orange">Map Intelligence</span>
+          </div>
+        </article>
+
+        <div class="arrow-down"></div>
+
+        <article class="step right">
+          <div class="step-number">14</div>
+          <h2>Inspect Details & Lower Panels</h2>
+          <p>
+            Let the user review node details, anomalies, vendor concentration, category spread, request waterfall,
+            and consent classification in supporting panels under the main stage.
+          </p>
+          <div class="tags">
+            <span class="tag purple">Details Panel</span>
+            <span class="tag blue">Risk Panels</span>
+            <span class="tag green">Interactive Review</span>
+          </div>
+        </article>
+      </section>
+
+      <section class="phase">
+        <div class="phase-header">Phase 6 — Review & Handoff</div>
+
+        <article class="decision">
+          <h2>TL / Client Demo Review</h2>
+          <p>
+            Check whether the PoC clearly demonstrates the end-to-end story: crawl a site, collect cookies,
+            transform them into intelligence data, expose them through APIs, and visualize them in a refined dashboard.
+          </p>
+        </article>
+
+        <div class="decision-labels">
+          <div class="decision-label approved">Approved</div>
+          <div class="decision-label iterate">Iterate</div>
+        </div>
+
+        <div class="connector-row">
+          <div class="line-left"></div>
+          <div class="line-right"></div>
+        </div>
+
+        <div class="branch-row">
+          <article class="branch approved">
+            <h3>Prepare for Handoff</h3>
+            <p>
+              Clean the repo, document setup steps, include sample crawl output, explain endpoints,
+              and package the dashboard together with the workflow page for presentation.
+            </p>
+            <div class="tags">
+              <span class="tag green">README</span>
+              <span class="tag blue">Run Steps</span>
+              <span class="tag orange">Demo Pack</span>
+            </div>
+          </article>
+
+          <article class="branch iterate">
+            <h3>Address Feedback</h3>
+            <p>
+              Improve graph readability, expand filters, support pre/post-consent comparison,
+              and deepen vendor/request relationship modeling before the next review.
+            </p>
+            <div class="tags">
+              <span class="tag red">UI Fixes</span>
+              <span class="tag orange">Consent Delta</span>
+              <span class="tag blue">Feature Upgrade</span>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <div class="footer-note">
+        <strong>How to use this:</strong> keep this page as your explanation and presentation layer, and keep your
+        Cookie Tracker Graph dashboard as the functional demo layer. Together, they tell one consistent implementation story.
+      </div>
+    </main>
+  </div>
+</body>
+</html>

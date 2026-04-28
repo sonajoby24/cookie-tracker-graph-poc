@@ -1,0 +1,56 @@
+{
+  "site": "https://www.wikipedia.org",
+  "cookie_count": 5,
+  "cookies": [
+    {
+      "name": "WMF-Last-Access",
+      "value": "23-Apr-2026",
+      "domain": "www.wikipedia.org",
+      "path": "/",
+      "expires": 1779700922.513348,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "WMF-Last-Access-Global",
+      "value": "23-Apr-2026",
+      "domain": ".wikipedia.org",
+      "path": "/",
+      "expires": 1779700922.519777,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "GeoIP",
+      "value": "SG::Singapore:1.29:103.85:v4",
+      "domain": ".wikipedia.org",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "NetworkProbeLimit",
+      "value": "0.001",
+      "domain": "www.wikipedia.org",
+      "path": "/",
+      "expires": 1776928223.520504,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "WMF-Uniq",
+      "value": "k4buwmaRrLbM0ft8ZG4JZwNLAAEBAFvdZ5gi6bevA1rO86tVvVBFrLHcv-6otmHz",
+      "domain": ".wikipedia.org",
+      "path": "/",
+      "expires": 1808475987.74115,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    }
+  ]
+}
