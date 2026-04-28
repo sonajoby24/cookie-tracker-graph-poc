@@ -36,6 +36,3 @@ python main.py
 - `node_modules/`, `.next/`, and `venv/` are excluded using `.gitignore`
 - Environment variables should be stored in `.env` files and should not be committed
 
-## Author
-
-Sona Joby
